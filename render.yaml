@@ -1,0 +1,163 @@
+# ---------------------------------------------------------------------------
+# TAStore — Render Blueprint (environnement de TEST)
+#
+# Ce fichier est lu par Render UNIQUEMENT lors de la création du service
+# depuis le tableau de bord : Dashboard > New > Blueprint.
+#
+# Il ne contient AUCUN secret. Les secrets sont déclarés `sync: false` :
+# Render les demandera dans le tableau de bord au moment de la création, et
+# ne les écrira jamais dans GitHub.
+#
+# Documentation : https://render.com/docs/blueprint-spec
+# ---------------------------------------------------------------------------
+
+services:
+  - type: web
+    name: tastore-api
+
+    # Render n'a pas de runtime PHP natif : le seul moyen de déployer
+    # Laravel est une image Docker. Cf. tontine-app/Dockerfile.
+    runtime: docker
+
+    # Monorepo : le Dockerfile est à la racine de tontine-app/ et le contexte
+    # de build doit être CE dossier. `dockerContext` est relatif à la RACINE
+    # du dépôt (et non à rootDir) — sans cette ligne, Render verrait le dépôt
+    # entier en contexte et le COPY . . de l'image embarquerait les deux
+    # autres applications.
+    dockerfilePath: ./tontine-app/Dockerfile
+    dockerContext: ./tontine-app
+    rootDir: tontine-app
+
+    plan: free
+    # Modifiable uniquement à la création. Francfort est le plus proche de
+    # l'Afrique de l'Ouest parmi les régions Render.
+    region: frankfurt
+
+    # /up ne teste que le processus PHP : l'orchestrateur ne doit pas tuer le
+    # conteneur parce que la base met une seconde à répondre.
+    healthCheckPath: /up
+
+    envVars:
+      # --- Application ------------------------------------------------------
+      - key: APP_NAME
+        value: TAStore
+      - key: APP_ENV
+        value: production
+      # IMPÉRATIF : les stack traces exposent l'arborescence, la configuration
+      # et les variables d'environnement. Le garde-fou application journalise
+      # une alerte critique si APP_DEBUG=true en production.
+      - key: APP_DEBUG
+        value: "false"
+      # URL de l'API elle-même. Sert notamment à construire les URL des
+      # images produits (config/filesystems.php) : si elle est fausse, aucune
+      # photo ne s'affiche jamais.
+      - key: APP_URL
+        value: https://tastore-api.onrender.com
+      # `sync: false` -> Render la demande à la création.
+      # Générer la valeur avec : php artisan key:generate --show
+      # Ne JAMAIS utiliser une valeur de développement : elle est dans le
+      # dépôt local et sur le canal de discussion.
+      - key: APP_KEY
+        sync: false
+
+      # --- Base de données (Neon Postgres gratuit) -------------------------
+      # Le service gratuit de Render a un disque ÉPHÉMÈRE : SQLite y perdrait
+      # ses données à chaque redémarrage et à chaque mise en veille (15 min
+      # sans trafic), et l'offre gratuite ne permet pas de disque persistant.
+      # Neon fournit un Postgres gratuit de 0,5 Go sans expiration.
+      # Coller ici la « Connection string » de la branche principale :
+      # https://console.neon.tech/app/projects
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        sync: false
+
+      # --- Cache / session / file d'attente -------------------------------
+      # Sur une base unique et un service unique, le pilote `database` est
+      # suffisant et gratuit. Il faudra lancer un worker de file d'attente
+      # pour les notifications (aucune opération financière n'y passe : tout
+      # est synchrone et transactionnel).
+      - key: CACHE_STORE
+        value: database
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_LIFETIME
+        value: "120"
+      # Un changement de mot de passe invalide les AUTRES sessions.
+      - key: SESSION_REVOKE_OTHERS_ON_PASSWORD_CHANGE
+        value: "true"
+      - key: QUEUE_CONNECTION
+        value: database
+
+      # --- Fichiers et proxy ----------------------------------------------
+      - key: FILESYSTEM_DISK
+        value: local
+      # Render termine le TLS et transmet du HTTP au conteneur : sans cette
+      # confiance, Laravel croit la requête en HTTP (URLs, cookies `secure`).
+      # Seul Render atteint le conteneur, donc le "*" n'ouvre à personne.
+      - key: TRUSTED_PROXIES
+        value: "*"
+
+      # --- Frontend / CORS -------------------------------------------------
+      # ORIGINE du SPA React, PAS celle de l'API. Sans cette variable,
+      # l'application refuse de démarrer en production (AppServiceProvider
+      # lève une exception si la liste CORS est vide).
+      # Si le projet Vercel s'appelle autrement que « tastore », corriger ici.
+      - key: FRONTEND_URL
+        value: https://tastore.vercel.app
+      - key: FRONTEND_URLS
+        value: ""
+      - key: CORS_MAX_AGE
+        value: "0"
+
+      # --- Authentification (Sanctum, tokens Bearer) ------------------------
+      # 43200 minutes = 30 jours. Jamais 0 (tokens sans expiration) en
+      # production.
+      - key: SANCTUM_TOKEN_EXPIRATION
+        value: "43200"
+      - key: SANCTUM_TOKEN_NAME
+        value: spa
+
+      # --- Journalisation --------------------------------------------------
+      - key: LOG_CHANNEL
+        value: stack
+      # "daily" obligatoire : "single" écrit un fichier unique qui grossit
+      # sans limite et remplit le disque.
+      - key: LOG_STACK
+        value: daily
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_DAILY_DAYS
+        value: "7"
+
+      # --- Paiements -------------------------------------------------------
+      # AUCUN fournisseur Mobile Money réel n'est intégré. En production le
+      # faux fournisseur refuse de s'exécuter : les paiements par code de
+      # transfert restent utilisables, le paiement automatique non.
+      - key: PAYMENT_PROVIDER
+        value: fake
+      - key: PAYMENT_ALLOW_FAKE_IN_PRODUCTION
+        value: "false"
+      - key: PAYMENT_CURRENCY
+        value: XOF
+      # TAUX FIGÉ : 0.07 = 7 %. Le repli de config/commissions.php est 0.03,
+      # et la table `settings` est VIDE sur une base neuve : sans cette
+      # variable, toutes les commissions seraient calculées à 3 %.
+      - key: COMMISSION_RATE
+        value: "0.07"
+
+      # Secret de signature des webhooks. `sync: false` : à définir, sinon
+      # TOUS les webhooks sont rejetés en 503.
+      - key: MOBILEMONEY_WEBHOOK_SECRET
+        sync: false
+
+      # --- Mail ------------------------------------------------------------
+      # "log" : aucun SMTP n'est configuré. Les e-mails de réinitialisation
+      # de mot de passe sont écrits dans les logs du service (Dashboard >
+      # Logs) au lieu d'être envoyés. Suffisant pour un test.
+      - key: MAIL_MAILER
+        value: log
+      - key: MAIL_FROM_ADDRESS
+        value: no-reply@tastore.test
+      - key: MAIL_FROM_NAME
+        value: TAStore

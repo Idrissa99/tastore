@@ -1,0 +1,82 @@
+# ---------------------------------------------------------------------------
+# TAStore — dépôt unique (monorepo)
+#
+# Contient trois applications indépendantes :
+#   tontine-app/       API Laravel      -> déployée sur Render
+#   tontine-frontend/  SPA React/Vite   -> déployée sur Vercel
+#   tontine-mobile/    application Flutter/Android -> distribuée en APK
+#
+# Chaque application conserve SON PROPRE .gitignore. Celui-ci ne couvre que
+# ce qui est propre à l'umbrella etiau risque de fuite transversale.
+# ---------------------------------------------------------------------------
+
+# --- Secrets ---------------------------------------------------------------
+# Règle large puis exception explicite : `.env` ET toutes ses variantes
+# (.env.local, .env.production, .env.testing...) sont exclus, seul
+# `.env.example` — qui ne contient QUE des noms de variables — est versionné.
+.env
+.env.*
+!.env.example
+
+# --- Bases de données locales ---------------------------------------------
+# La base SQLite de développement contient des données réelles (comptes,
+# cotisations, contributions). Elle ne doit JAMAIS être poussée : elle reste
+# sur la machine, comme demandé.
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+database/database.sqlite
+database/*.sqlite*
+
+# --- Sauvegardes -----------------------------------------------------------
+*_backup/
+*.bak
+
+# --- Dépendances -----------------------------------------------------------
+node_modules/
+vendor/
+
+# --- Build et caches -------------------------------------------------------
+dist/
+build/
+.dart_tool/
+.phpunit.result.cache
+.phpunit.cache
+public/hot
+public/storage
+bootstrap/cache/*.php
+
+# --- Journaux --------------------------------------------------------------
+*.log
+storage/logs/
+
+# --- Clés privées et secrets (double filet : un .gitignore peut être contourné) --
+*.jks
+*.keystore
+key.properties
+*.pem
+*.p12
+*.pfx
+id_rsa
+id_rsa.pub
+auth.json
+.netrc
+.npmrc
+
+# --- Système et éditeurs ---------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.cursor/
+.zed/
+*.iml
+
+# --- Liens symboliques imbriqués -------------------------------------------
+# Ces entrées pointent HORS du dépôt (copies de travail). Les suivre ferait
+# remonter dans Git des fichiers situés ailleurs sur le disque.
+tontine-app/tontine-app
+tontine-frontend/tontine-frontend

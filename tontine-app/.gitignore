@@ -1,0 +1,49 @@
+*.log
+.DS_Store
+
+# Secrets : `.env` et TOUTES ses variantes sont exclus. Seule l'exception
+# ci-dessous est versionnée — `.env.example` ne contient que des noms de
+# variables, jamais de valeur réelle.
+.env
+.env.*
+!.env.example
+
+.phpactor.json
+.phpunit.result.cache
+/.codex
+/.cursor/
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/fonts-manifest.dev.json
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+_ide_helper.php
+Homestead.json
+Homestead.yaml
+Thumbs.db
+
+# --- Base SQLite locale ----------------------------------------------------
+# Elle contient des données réelles (comptes utilisateurs, cotisations,
+# contributions). Elle reste sur la machine et n'est JAMAIS poussée, ni sur
+# GitHub ni dans l'image Docker (voir aussi .dockerignore).
+/database/*.sqlite
+/database/*.sqlite3
+/database/*.sqlite-journal
+/database/*.sqlite-wal
+/database/*.sqlite-shm
+/database/*.db
+
+# --- Sauvegardes ------------------------------------------------------------
+# `php artisan app:backup` écrit ici : elles contiennENT la base et peuvent
+# contenir des jetons d'API.
+/storage/app/backups/
+/storage/app/private/
