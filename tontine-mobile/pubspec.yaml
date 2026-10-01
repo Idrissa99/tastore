@@ -1,0 +1,49 @@
+name: tontine_achat_store
+description: "Tontine Achat Store —_application mobile de tontines d'achat pour Android et iOS."
+publish_to: "none"
+
+# Version alignée sur le backend Laravel (API v1).
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # ── État ───────────────────────────────────────────────────────────────
+  flutter_riverpod: ^2.5.1
+
+  # ── Réseau ─────────────────────────────────────────────────────────────
+  http: ^1.2.1
+
+  # ── Stockage ───────────────────────────────────────────────────────────
+  # Le jeton Sanctum est un secret : keystore Android / Keychain iOS,
+  # jamais en SharedPreferences (lisible sur un appareil non rooté).
+  flutter_secure_storage: ^9.2.2
+
+  # ── Navigation ─────────────────────────────────────────────────────────
+  go_router: ^14.2.0
+
+  # ── Formatage ──────────────────────────────────────────────────────────
+  intl: ^0.19.0
+
+  # ── Médias ─────────────────────────────────────────────────────────────
+  # Cache disque des photos produits : évite de retélécharger la même image
+  # à chaque défilement du catalogue.
+  cached_network_image: ^3.3.1
+
+  # ── Upload ─────────────────────────────────────────────────────────────
+  # Sélection de photos et vidéos pour l'espace commerçant.
+  image_picker: ^1.1.2
+  flutter_local_notifications: ^22.3.1
+  timezone: ^0.11.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

@@ -1,0 +1,34 @@
+# Tout ce qui n'est pas nécessaire à l'exécution de l'API. Sans ce fichier,
+# le contexte envoyé au démon de build contiendrait .env, la base SQLite
+# locale et les sauvegardes — c'est-à-dire des secrets et des données.
+.env
+.env.*
+!.env.example
+/database/*.sqlite
+/database/*.sqlite3
+/database/*.db
+/storage/app/backups/
+/storage/logs/
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/vendor
+/tests
+/docs
+/.phpunit.result.cache
+/.phpunit.cache
+/.git
+/.gitignore
+docker/
+/.idea
+/.vscode
+/.zed
+/.cursor
+.DS_Store
+Dockerfile
+.dockerignore
+render.yaml

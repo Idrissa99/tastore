@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Autorise le HTTP en clair, mais UNIQUEMENT vers les hôtes de développement.
+
+  Depuis Android 9 (API 28), toute requête `http://` est bloquée par défaut :
+  sans cette exception, l'application ne peut pas joindre le backend Laravel
+  local et chaque appel échoue sans message exploitable.
+
+  La liste est volontairement restreinte, et `base-config` refuse le clair
+  partout ailleurs : une URL en `http://` vers un domaine quelconque échoue
+  encore. Une application en production doit pouvoir joindre son API en HTTPS.
+
+  Trois vagues d'hôtes sont autorisées :
+    - `localhost` et `127.0.0.1` : le backend sur la machine de développement ;
+    - `10.0.2.2` : l'alias que l'émulateur Android utilise pour désigner
+      l'hôte de la machine ;
+    - l'adresse Wi-Fi du poste : c'est elle que vise un téléphone physique,
+      `10.0.2.2` n'y existant pas.
+
+  Si l'adresse Wi-Fi du poste change (bail DHCP), c'est LA SEULE ligne à
+  modifier ici, puis à recompiler. Deux solutions à cette corvée :
+    - garder `127.0.0.1` comme URL de l'API, et faire pointer le téléphone sur
+      le poste par `adb reverse tcp:8000 tcp:8000`. Aucun Bail DHCP à suivre,
+      mais le câble USB doit rester branché ;
+    - ou corriger la ligne ci-dessous à chaque changement d'adresse, ce qui
+      permet de tester en Wi-Fi sans câble.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <!-- Adresse Wi-Fi du poste au moment de la compilation. -->
+        <domain includeSubdomains="false">192.168.173.43</domain>
+    </domain-config>
+</network-security-config>
