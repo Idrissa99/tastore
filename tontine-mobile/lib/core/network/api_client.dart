@@ -54,7 +54,19 @@ class ApiClient {
     required this.writeToken,
     required this.clearToken,
   })  : _http = httpClient ?? http.Client(),
-        _baseUrl = baseUrl ?? AppConfig.apiBaseUrl;
+        _baseUrl = baseUrl ?? _resolveBaseUrl();
+
+  /// Résout l'URL de l'API en vérifiant le schéma AVANT tout appel réseau.
+  ///
+  /// Élevé en factory pour que l'erreur soit remontée au premier écran plutôt
+  /// qu'à la première requête : sans cela, une URL `http://` dans un APK
+  /// compilé avec `ALLOW_INSECURE=false` se manifeste par une
+  /// SocketException muette, indiscernable d'un téléphone hors ligne.
+  static String _resolveBaseUrl() {
+    final url = AppConfig.apiBaseUrl;
+    AppConfig.assertTransportAllowed(url);
+    return url;
+  }
 
   final http.Client _http;
   final String _baseUrl;

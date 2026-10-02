@@ -23,7 +23,9 @@
 /.phpunit.cache
 /.git
 /.gitignore
-docker/
+# `docker/` n'est PAS exclu : le Dockerfile y fait COPY pour nginx.conf,
+# php-fpm.conf, php.ini et start.sh. L'exclure rend le build impossible
+# ("/docker/nginx.conf: not found").
 /.idea
 /.vscode
 /.zed

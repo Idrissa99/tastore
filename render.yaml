@@ -51,6 +51,7 @@ services:
       # URL de l'API elle-même. Sert notamment à construire les URL des
       # images produits (config/filesystems.php) : si elle est fausse, aucune
       # photo ne s'affiche jamais.
+      # ⚠ À REMPLACER par l'URL réelle que Render attribue au service.
       - key: APP_URL
         value: https://tastore-api.onrender.com
       # `sync: false` -> Render la demande à la création.
@@ -60,23 +61,46 @@ services:
       - key: APP_KEY
         sync: false
 
-      # --- Base de données (Neon Postgres gratuit) -------------------------
-      # Le service gratuit de Render a un disque ÉPHÉMÈRE : SQLite y perdrait
-      # ses données à chaque redémarrage et à chaque mise en veille (15 min
-      # sans trafic), et l'offre gratuite ne permet pas de disque persistant.
-      # Neon fournit un Postgres gratuit de 0,5 Go sans expiration.
-      # Coller ici la « Connection string » de la branche principale :
-      # https://console.neon.tech/app/projects
+      # --- Base de données (MySQL) ------------------------------------------
+      # ⚠ MySQL N'EST PAS FOURNI PAR RENDER. Ces cinq variables sont
+      # `sync: false` : il faut un MySQL managé gratuit PARTOUT ailleurs.
+      #
+      #   Aiven  : aiven.io/free-mysql-database — 1 Go, sans carte
+      #            bancaire, sans expiration. Console > Create service >
+      #            MySQL > Plan `Free`. Les paramètres de connexion sont
+      #            dans Overview > Connection information.
+      #   TiDB   : cloud.tidb.com — compatible MySQL, offre Starter
+      #            gratuite, mais le port et le TLS diffèrent.
+      #   Oracle : MySQL HeatWave Always Free — le plus généreux (50 Go)
+      #            mais l'inscription demande une carte et peut être
+      #            rejetée si l'adresse n'est pas dans une région éligible.
+      #
+      # ⚠ MySQL 8.0.16 minimum : avant cette version, les contraintes CHECK
+      #   sont ACCEPTÉES puis IGNORÉES, et la migration 2026_09_28_000002
+      #   croirait avoir protégé les montants alors que non.
       - key: DB_CONNECTION
-        value: pgsql
-      - key: DB_URL
+        value: mysql
+      - key: DB_HOST
         sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_DATABASE
+        value: tontine
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      # Le charset par défaut de config/database.php est déjà utf8mb4, mais
+      # on le fixe explicitement : une base créée en latin1 refuse les accents
+      # et les emojis des noms de produits.
+      - key: DB_CHARSET
+        value: utf8mb4
+      - key: DB_COLLATION
+        value: utf8mb4_unicode_ci
 
       # --- Cache / session / file d'attente -------------------------------
       # Sur une base unique et un service unique, le pilote `database` est
-      # suffisant et gratuit. Il faudra lancer un worker de file d'attente
-      # pour les notifications (aucune opération financière n'y passe : tout
-      # est synchrone et transactionnel).
+      # suffisant et gratuit.
       - key: CACHE_STORE
         value: database
       - key: SESSION_DRIVER
@@ -102,7 +126,8 @@ services:
       # ORIGINE du SPA React, PAS celle de l'API. Sans cette variable,
       # l'application refuse de démarrer en production (AppServiceProvider
       # lève une exception si la liste CORS est vide).
-      # Si le projet Vercel s'appelle autrement que « tastore », corriger ici.
+      # ⚠ À REMPLACER par le vrai domaine Vercel (le projet « tastore » est
+      #   déjà pris sur Vercel, le tien aura donc un autre nom).
       - key: FRONTEND_URL
         value: https://tastore.vercel.app
       - key: FRONTEND_URLS

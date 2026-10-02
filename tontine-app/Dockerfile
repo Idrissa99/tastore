@@ -35,18 +35,18 @@ RUN composer install \
 
 FROM php:8.3-fpm-alpine
 
-# pdo_pgsql : base Neon (Postgres) sur Render
-# pdo_sqlite : base locale de développement
-# intl       : formatage des montants et des dates en français
+# pdo_mysql   : base MySQL sur Render (cf. render.yaml)
+# pdo_sqlite  : base locale de développement et suite de tests
+# intl        : formatage des montants et des dates en français
 # zip         : archives de sauvegarde / exports
 # opcache     : cache d'opcodes, indispensable sur un service qui redémarre
 # bcmath      : arithmétique des montants
 RUN set -eux; \
     apk add --no-cache nginx curl; \
     apk add --no-cache --virtual .build-deps \
-        $PHPIZE_DEPS icu-dev postgresql-dev libzip-dev; \
+        $PHPIZE_DEPS icu-dev mysql-dev libzip-dev; \
     docker-php-ext-install -j"$(nproc)" \
-        opcache pdo_pgsql pdo_sqlite intl zip bcmath; \
+        opcache pdo_mysql pdo_sqlite intl zip bcmath; \
     apk del --no-network .build-deps
 
 WORKDIR /var/www/html

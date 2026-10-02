@@ -26,6 +26,11 @@
       permet de tester en Wi-Fi sans câble.
 -->
 <network-security-config>
+    <!-- HTTPS obligatoire, sauf pour les hôtes de développement listés
+         ci-dessous. Un APK de test déployé utilise une URL https:// : rien
+         à ajouter ici, et il ne faut surtout PAS ajouter
+         `cleartextTrafficPermitted="true"` en base-config — cela
+         repermettrait le HTTP en clair vers n'importe quel domaine. -->
     <base-config cleartextTrafficPermitted="false" />
 
     <domain-config cleartextTrafficPermitted="true">

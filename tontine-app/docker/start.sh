@@ -16,8 +16,7 @@
 #     démarrage, car il ne peut pas l'être pendant le build.
 #  5. migrate --force            : MIGRATIONS NORMALES, jamais
 #     `migrate:fresh`. Le schéma est créé s'il est vide ; les données
-#     existantes sont conservées. `sync: false` sur le verrou évite que
-#     deux instances ne migrent en parallèle.
+#     existantes sont conservées.
 #  6. seed si base vide          : sans cela, une base neuve n'a aucun
 #     compte et les espaces admin / commerçant sont inutilisables. Le seed
 #     est idempotent : il ne s'exécute que sur une base sans utilisateur.
@@ -43,15 +42,15 @@ grep -q "listen ${PORT};" /etc/nginx/http.d/default.conf || {
 }
 
 # --- 2. .env à partir de l'environnement du processus ----------------------
-# ÉcritureMinimale : on ne recopie que ce qui est défini, et on n'affiche
+# Écriture minimale : on ne recopie que ce qui est défini, et on n'affiche
 # AUCUNE valeur (les logs de Render sont publics pour un service public).
 write_env() {
     name="$1"
     value="$(printenv "$name" || true)"
     [ -n "$value" ] || return 0
     if grep -q "^${name}=" .env 2>/dev/null; then
-        # sed avec un séparateur rare, et échappement des caractères /
-        escaped=$(printf '%s' "$value" | sed -e 's/[&|]/\\&/g')
+        # sed avec un séparateur rare, et échappement des caractères / & |
+        escaped=$(printf '%s' "$value" | sed -e 's/[&|\\]/\\&/g')
         sed -i "s|^${name}=.*|${name}=${escaped}|" .env
     else
         printf '%s=%s\n' "$name" "$value" >> .env
@@ -75,7 +74,7 @@ fi
 for name in \
     APP_ENV APP_DEBUG APP_NAME APP_URL \
     LOG_CHANNEL LOG_STACK LOG_LEVEL LOG_DAILY_DAYS \
-    DB_CONNECTION DB_URL DB_SSLMODE \
+    DB_CONNECTION DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD \
     CACHE_STORE SESSION_DRIVER QUEUE_CONNECTION \
     SESSION_LIFETIME SESSION_REVOKE_OTHERS_ON_PASSWORD_CHANGE \
     FILESYSTEM_DISK TRUSTED_PROXIES \
@@ -113,7 +112,7 @@ echo "==> Migrations"
 php artisan migrate --force --ansi
 
 # --- 6. Jeu de démonstration, une seule fois -------------------------------
-# Sur une base NEUVE (Neon), l'application n'aurait AUCUN compte : ni
+# Sur une base NEUVE, l'application n'aurait AUCUN compte : ni
 # administrateur, ni commerçant. Les espaces correspondants seraient donc
 # impossibles à tester — et Render en offre gratuit n'a AUCUN shell : on ne
 # peut pas créer ces comptes à la main après coup.

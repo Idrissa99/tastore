@@ -4,7 +4,7 @@
  * Pourquoi ce fichier existe : l'URL était lue en deux endroits
  * (`src/api/client.js` et `src/components/ui/ProductImage.jsx`), chacun avec
  * son propre repli sur `http://127.0.0.1:8000/api`. Un build de production
- * sans `VITE_API_BASE_URL`defined produisait donc un site web qui n'appelait
+ * sans `VITE_API_BASE_URL` défini produisait donc un site web qui n'appelait
  * QUE la machine du développeur, sans le moindre avertissement : l'erreur
  * n'apparaissait qu'à l'écran, une fois le site déployé.
  *
