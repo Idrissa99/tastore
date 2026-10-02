@@ -13,11 +13,6 @@
 /// flutter run --dart-define=API_BASE_URL=http://127.0.0.1:8000/api
 /// ```
 ///
-/// # APK de test déployé (API distante HTTPS)
-/// flutter build apk --release \
-///   --dart-define=API_BASE_URL=https://ton-api.onrender.com/api \
-///   --dart-define=ALLOW_INSECURE=false
-///
 /// Sans `--dart-define`, on retombe sur la valeur la plus probable :
 /// `10.0.2.2` sous Android (où `127.0.0.1` désignerait l'émulateur
 /// lui-même), `127.0.0.1` ailleurs.
@@ -53,44 +48,13 @@ class AppConfig {
   static String _stripTrailingSlash(String value) =>
       value.endsWith('/') ? value.substring(0, value.length - 1) : value;
 
-  /// Autorise le HTTP en clair. Nécessaire en développement local, où le
-  /// backend tourne sur le poste en http://.
-  ///
-  /// Un APK de test déployé doit passer par HTTPS : on compile donc avec
-  /// `--dart-define=ALLOW_INSECURE=false`, et le garde-fou ci-dessous lève
-  /// une exception au PREMIER accès réseau plutôt que de laisser l'utilisateur
-  /// watching un écran d'erreur « pas de connexion » caused by a http:// URL
-  /// rejetée en silence par Android.
+  /// Autorise le HTTP en clair. Nécessaire en développement local ; à
+  /// désactiver en production (`--dart-define=ALLOW_INSECURE=false`) pour
+  /// forcer le passage par HTTPS.
   static const bool allowInsecureTransport = bool.fromEnvironment(
     'ALLOW_INSECURE',
     defaultValue: true,
   );
-
-  /// Refuse une URL API non-HTTPS quand le transport en clair est interdit.
-  ///
-  /// `android/app/src/main/res/xml/network_security_config.xml` bloque déjà
-  /// le HTTP en clair pour tout hôte hors de la liste de développement, mais
-  /// un échec de ce type se manifeste par une SocketException sans message
-  /// exploitable. Cette vérification le transforme en cause claire.
-  static void assertTransportAllowed(String url) {
-    if (allowInsecureTransport) return;
-
-    final uri = Uri.tryParse(url);
-    if (uri == null) {
-      throw StateError(
-        'API_BASE_URL est illisible : « $url ». Attendu : '
-        'https://ton-api.example.com/api',
-      );
-    }
-
-    if (uri.scheme != 'https') {
-      throw StateError(
-        'ALLOW_INSECURE=false impose HTTPS, mais API_BASE_URL vaut « $url ». '
-        'Reconstruis l\'APK avec une URL https://, ou passe '
-        '--dart-define=ALLOW_INSECURE=true pour un test en local.',
-      );
-    }
-  }
 
   static const Duration connectTimeout = Duration(seconds: 20);
   static const Duration receiveTimeout = Duration(seconds: 30);

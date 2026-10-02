@@ -1,12 +1,8 @@
 *.log
 .DS_Store
-
-# Secrets : `.env` et TOUTES ses variantes sont exclus. Seule l'exception
-# ci-dessous est versionnée — `.env.example` ne contient que des noms de
-# variables, jamais de valeur réelle.
 .env
-.env.*
-!.env.example
+.env.backup
+.env.production
 .phpactor.json
 .phpunit.result.cache
 /.codex
@@ -29,28 +25,3 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
-
-# --- Base SQLite locale ----------------------------------------------------
-# Elle contient des données réelles (comptes utilisateurs, cotisations,
-# contributions). Elle reste sur la machine et n'est JAMAIS poussée, ni sur
-# GitHub ni dans l'image Docker (voir aussi .dockerignore).
-/database/*.sqlite
-/database/*.sqlite3
-/database/*.sqlite-journal
-/database/*.sqlite-wal
-/database/*.sqlite-shm
-/database/*.db
-
-# --- Sauvegardes ------------------------------------------------------------
-# `php artisan app:backup` écrit ici : elles contienNT la base et peuvent
-# contenir des jetons d'API.
-/storage/app/backups/
-/storage/app/private/
-
-# --- Artefacts de tests ------------------------------------------------------
-# `InfrastructureResilienceTest` écrit des dumps SQLite sous
-# `base_path($config('backups.directory'))`. Quand ce chemin est absolu,
-# `base_path()` le concatène au projet et crée cette arborescence parasite
-# (`home/<user>/<projet>/tontine-app/storage/...`). Elle n'a rien à faire
-# dans le dépôt.
-/home

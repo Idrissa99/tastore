@@ -112,7 +112,7 @@ On fait Vercel d'abord pour connaître le domaine définitif, et le reporter dan
    **valeur d'exemple** — il faut la remplacer par le vrai domaine (étape 5).
 
 6. Tester que le build a réussi : le site affiche la page d'accueil React.
-   Tant que `VITE_API_BASE_URL` est absente, `src/config/api.js` échoue
+   Tant que `VITE_API_BASE_URL` est absente, `src/api/client.js` échoue
    bruyamment au chargement plutôt que de retomber sur `localhost`.
 
 ---

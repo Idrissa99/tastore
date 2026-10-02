@@ -12,14 +12,6 @@ dist
 dist-ssr
 *.local
 
-# --- Environnement ---------------------------------------------------------
-# `.env` et toutes ses variantes sont exclus. La règle `*.local` ci-dessus ne
-# suffisait pas : `.env` ne se termine pas par `.local`, le fichier aurait donc
-# été poussé sur GitHub. Seule l'exception ci-dessous est versionnée.
-.env
-.env.*
-!.env.example
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

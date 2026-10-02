@@ -75,6 +75,22 @@ Thumbs.db
 .zed/
 *.iml
 
+# --- Artefacts de tests ----------------------------------------------------
+# InfrastructureResilienceTest positionne `backups.directory` sur un chemin
+# ABSOLU (storage_path(...)). DatabaseBackupService::backupDirectory() y
+# applique `base_path()`, qui concatène sans tester le caractère absolu : le
+# chemin doublé `<app>/home/<chemin-absolu>/...` est donc créé à la racine de
+# l'application, avec un `.sql` par exécution. Ce n'est pas une donnée à
+# versionner, et l'artefact revit à chaque `composer test` : on l'ignore.
+# Chemin ANCRÉ sur tontine-app/ : un motif `home/` nu masquerait aussi la
+# source Flutter `tontine-mobile/lib/features/home/`.
+/tontine-app/home/
+
+# `storage/framework/testing/` n'a pas besoin d'être listé ici : le
+# `.gitignore` de Laravel livré dans ce dossier (`*` puis `!.gitignore`)
+# ignore déjà les `backups-*/`, et un motif du .gitignore racine ne
+# surchargerait pas sa ré-inclusion.
+
 # --- Liens symboliques imbriqués -------------------------------------------
 # Ces entrées pointent HORS du dépôt (copies de travail). Les suivre ferait
 # remonter dans Git des fichiers situés ailleurs sur le disque.

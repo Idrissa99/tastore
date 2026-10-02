@@ -1,16 +1,19 @@
 import { ImageOff } from 'lucide-react';
-import { API_ORIGIN } from '../../config/api.js';
 
 /**
  * Image de produit avec repli élégant.
  * L'API renvoie soit `image` (legacy), soit `images[0].url` (ProductMedia).
  * Les URLs sont relatives au domaine du backend : on les rend absolues.
- *
- * L'origine vient de `src/config/api.js` — source unique de vérité, cf. le
- * commentaire de ce fichier sur les builds de production.
  */
 
-const BACKEND_ORIGIN = API_ORIGIN;
+const BACKEND_ORIGIN = (() => {
+  const base = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
+  try {
+    return new URL(base).origin;
+  } catch {
+    return '';
+  }
+})();
 
 /** Transforme une URL de média backend en URL absolue exploitable par <img>. */
 export function mediaUrl(url) {

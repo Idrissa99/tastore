@@ -46,18 +46,3 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
-
-# --- Secrets ---------------------------------------------------------------
-# Aucune clé de signature ne doit jamais être poussée : elle permettrait de
-# produire des APK usurpant l'identité de l'application.
-*.jks
-*.keystore
-key.properties
-google-services.json
-
-# --- Environnement ---------------------------------------------------------
-# Un futur `flutter build` basé sur `.env` (ou sur un fichier de configuration
-# local) ne doit pas être versionné.
-.env
-.env.*
-!.env.example
