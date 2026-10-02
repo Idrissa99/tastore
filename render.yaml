@@ -20,13 +20,21 @@ services:
     runtime: docker
 
     # Monorepo : le Dockerfile est à la racine de tontine-app/ et le contexte
-    # de build doit être CE dossier. `dockerContext` est relatif à la RACINE
-    # du dépôt (et non à rootDir) — sans cette ligne, Render verrait le dépôt
-    # entier en contexte et le COPY . . de l'image embarquerait les deux
+    # de build doit être CE dossier. Sans `dockerContext`, Render verrait le
+    # dépôt entier en contexte et le COPY . . de l'image embarquerait les deux
     # autres applications.
+    #
+    # `dockerContext` est ici relatif à la RACINE du dépôt, donc AUCUN
+    # `rootDir` ne doit être défini : Render concatène les deux et résout
+    # `tontine-app` + `./tontine-app` = `tontine-app/tontine-app`. Le build
+    # échoue alors avant même de commencer :
+    #   error: invalid local: resolve : lstat
+    #   /opt/render/project/src/tontine-app/tontine-app: no such file or directory
+    # Perte acceptable : `rootDir` ne servait qu'à limiter les builds
+    # automatiques aux fichiers de tontine-app/ (buildFilter fait le même
+    # travail, sans ce risque de doublage).
     dockerfilePath: ./tontine-app/Dockerfile
     dockerContext: ./tontine-app
-    rootDir: tontine-app
 
     plan: free
     # Modifiable uniquement à la création. Francfort est le plus proche de
