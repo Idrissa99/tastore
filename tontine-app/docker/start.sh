@@ -162,13 +162,44 @@ php-fpm --daemonize
 nginx -g 'daemon off;' &
 NGINX_PID=$!
 
+# --- 8. Auto-diagnostic de la sonde ---------------------------------------
+# Render n'affiche que les logs DU conteneur. Or une exception Laravel part
+# dans storage/logs/laravel-*.log : sur le disque éphémère de l'offre
+# gratuite, sans shell, elle est INACCESSIBLE. Résultat observé : une boucle
+# de « 500 » sur /up puis « Timed Out », sans jamais la cause — et l'edge ne
+# transmet plus rien, donc impossible de lire la réponse HTTP de l'extérieur.
+# On interroge donc la sonde nous-mêmes, puis on recopie le log applicatif.
+echo "==> Auto-diagnostic de /up"
+PROBE=000
+for _ in 1 2 3 4 5; do
+    PROBE="$(curl -s -o /tmp/up-probe.body -w '%{http_code}' --max-time 20 \
+        "http://127.0.0.1:${PORT}/up" 2>/dev/null || true)"
+    [ "$PROBE" = "200" ] && break
+    sleep 2
+done
+echo "    /up -> HTTP ${PROBE:-000}"
+
+if [ "${PROBE:-000}" != "200" ]; then
+    echo "    Sonde non verte. Log applicatif :"
+    LAST_LOG="$(ls -t storage/logs/laravel-*.log 2>/dev/null | head -n 1 || true)"
+    if [ -n "${LAST_LOG:-}" ] && [ -s "$LAST_LOG" ]; then
+        tail -n 20 "$LAST_LOG"
+    else
+        echo "    (pas de storage/logs/laravel-*.log : l'erreur vient de PHP, pas de Laravel)"
+    fi
+fi
+
 # Si l'un des deux s'arrête, le conteneur doit s'arrêter aussi : Render doit
 # le redémarrer proprement plutôt que de laisser un service qui répond à
 # moitié.
 term_handler() {
     echo "==> Arrêt"
     nginx -s quit 2>/dev/null || true
-    kill -QUIT "$(cat /usr/local/var/run/php-fpm.pids 2>/dev/null)" 2>/dev/null || true
+    # Le chemin du fichier PID suit la valeur `pid` par défaut de PHP-FPM
+    # (/usr/local/var/run/php-fpm.pid). Il pointait sur l'ancien socket Unix
+    # `php-fpm.pids`, supprimé quand php-fpm est passé en TCP : le signal
+    # partait dans le vide et le maître FPM survivait à l'arrêt.
+    kill -QUIT "$(cat /usr/local/var/run/php-fpm.pid 2>/dev/null)" 2>/dev/null || true
     wait "$NGINX_PID" 2>/dev/null || true
     exit 0
 }
