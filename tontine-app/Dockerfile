@@ -37,7 +37,11 @@ RUN composer install \
 # ne faisait que le copier, et le conteneur échouait sur
 # « Failed opening required '/var/www/html/vendor/autoload.php' ». Le
 # générateur est ici, entre le dépot des paquets et leur copie dans l'image.
-RUN composer dump-autoload --no-dev --optimize --no-interaction
+# --no-scripts est indispensable comme sur l'install ci-dessus : le script
+# `post-autoload-dump` lance `artisan package:discover`, et cette étape ne
+# contient ni artisan ni le code applicatif (« Could not open input file:
+# artisan »). La découverte des paquets est refaite par docker/start.sh.
+RUN composer dump-autoload --no-dev --optimize --no-interaction --no-scripts
 
 FROM php:8.3-fpm-alpine
 
