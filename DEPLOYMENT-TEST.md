@@ -154,6 +154,20 @@ Le seed est conditionnel à une base vide : c'est obligatoire, car le service
 gratuit se réveille après 15 min d'inactivité et le script s'exécute à **chaque**
 démarrage.
 
+Conséquence : `fakerphp/faker` est en `require`, **pas** en `require-dev`. Les
+seeders passent par les factories, qui appellent `fake()` — et Laravel ne
+déclare ce helper que sous condition :
+
+```php
+if (! function_exists('fake') && class_exists(\Faker\Factory::class)) {
+```
+
+Or l'image est construite avec `composer install --no-dev`. Sans Faker dans les
+dépendances de production, le helper n'existe pas et le seed meurt sur
+`Call to undefined function Database\Factories\fake()`. Retirer le seed n'était
+pas une option : l'offre gratuite n'a aucun shell, donc aucun moyen de créer les
+comptes admin et commerçant autrement.
+
 ### Après le premier déploiement
 
 - Si Render a attribué une autre URL que `https://tastore-api.onrender.com` :
