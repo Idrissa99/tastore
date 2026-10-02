@@ -35,19 +35,32 @@ RUN composer install \
 
 FROM php:8.3-fpm-alpine
 
-# pdo_mysql   : base MySQL sur Render (cf. render.yaml)
-# pdo_sqlite  : base locale de développement et suite de tests
-# intl        : formatage des montants et des dates en français
+# pdo_mysql   : base MySQL de production (cf. render.yaml)
 # zip         : archives de sauvegarde / exports
 # opcache     : cache d'opcodes, indispensable sur un service qui redémarre
 # bcmath      : arithmétique des montants
-RUN set -eux; \
-    apk add --no-cache nginx curl; \
-    apk add --no-cache --virtual .build-deps \
-        $PHPIZE_DEPS icu-dev mysql-dev libzip-dev; \
-    docker-php-ext-install -j"$(nproc)" \
-        opcache pdo_mysql pdo_sqlite intl zip bcmath; \
-    apk del --no-network .build-deps
+#
+# `intl` et `pdo_sqlite` ont été retirés du conteneur. Le service ne fait QUE
+# du MySQL (`.dockerignore` exclut *.sqlite, DB_CONNECTION=mysql) et l'appli
+# n'appelle aucune API dépendant d'intl : zéro `isoFormat`, `NumberFormatter`,
+# `IntlDateFormatter`, `Number::` ou `->locale()` dans app/ et resources/.
+# Or ces deux extensions sont les plus fragiles à compiler sur une image
+# Alpine qui glisse : `intl` casse régulièrement avec les nouvelles versions
+# d'ICU, et `pdo_sqlite` exige `sqlite-dev`, qui n'était pas dans la liste
+# d'apk ci-dessous. Les réintroduire = réinstaller `icu-dev` / `sqlite-dev`
+# et accepter de rebloquer à chaque bump d'Alpine.
+#
+# Chaque étape a son propre RUN : avec un seul `RUN set -eux`, un échec de
+# `docker-php-ext-install` remonte `exit code: 1` sans dire quelle extension
+# a cassé — le log ne montre que la dernière ligne.
+RUN apk add --no-cache nginx curl \
+    && apk add --no-cache --virtual .build-deps \
+        $PHPIZE_DEPS mysql-dev libzip-dev
+
+RUN docker-php-ext-install -j"$(nproc)" \
+        opcache pdo_mysql zip bcmath
+
+RUN apk del --no-network .build-deps
 
 WORKDIR /var/www/html
 
