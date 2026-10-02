@@ -142,10 +142,10 @@ services:
       # ORIGINE du SPA React, PAS celle de l'API. Sans cette variable,
       # l'application refuse de démarrer en production (AppServiceProvider
       # lève une exception si la liste CORS est vide).
-      # ⚠ À REMPLACER par le vrai domaine Vercel (le projet « tastore » est
-      #   déjà pris sur Vercel, le tien aura donc un autre nom).
+      # Domaine réel du SPA, vérifié en ligne : sans slash final, sinon
+      # l'origine comparée par le navigateur ne correspond pas.
       - key: FRONTEND_URL
-        value: https://tastore.vercel.app
+        value: https://tastore-beta.vercel.app
       - key: FRONTEND_URLS
         value: ""
       - key: CORS_MAX_AGE
