@@ -92,7 +92,11 @@ done
 
 # --- 3. Paquets et caches -------------------------------------------------
 echo "==> Découverte des paquets"
-php artisan package:discover --ansi --force
+# --force est INTERDIT ici : `package:discover` ne déclare aucune option
+# (`protected $signature = 'package:discover'`), et l'option `--force`
+# n'existe que sur storage:link, migrate et db:seed. Le fichier s'arrêtait
+# sur « The "--force" option does not exist. » avant même les migrations.
+php artisan package:discover --ansi
 
 echo "==> Cache de la configuration"
 php artisan config:cache --ansi
