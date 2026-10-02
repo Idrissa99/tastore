@@ -90,6 +90,21 @@ do
     write_env "$name"
 done
 
+# --- 2 bis. Variables sans lesquelles le BOOT échoue ------------------------
+# `write_env` ignore les valeurs vides : une variable absente de Render
+# disparaît donc du .env sans bruit. Or AppServiceProvider lève une
+# LogicException si la liste d'origines CORS est vide en production, et ce
+# throw part du boot : CHAQUE requête répond 500, y compris /up, donc Render
+# tue le deploy au bout de son délai et ne dit jamais pourquoi. On vérifie
+# avant de lancer quoi que ce soit, pour obtenir un message lisible.
+if grep -q '^APP_ENV=production' .env && ! grep -qE '^FRONTEND_URL=.+' .env; then
+    echo "ERREUR : FRONTEND_URL est absente ou vide dans l'environnement." >&2
+    echo "        Renseigne-la dans Render > Environment (c'est l'origine du SPA)," >&2
+    echo "        puis Save & Deploy. Sans elle, l'application refuse de démarrer :" >&2
+    echo "        « CORS obligatoire en production »." >&2
+    exit 1
+fi
+
 # --- 3. Paquets et caches -------------------------------------------------
 echo "==> Découverte des paquets"
 # --force est INTERDIT ici : `package:discover` ne déclare aucune option
