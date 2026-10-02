@@ -80,12 +80,20 @@ services:
       #   croirait avoir protégé les montants alors que non.
       - key: DB_CONNECTION
         value: mysql
+      # Hôte, port, nom de base, utilisateur et mot de passe : les CINQ
+      # viennent de l'hébergeur MySQL, Render ne peut pas les inventer.
+      #
+      # DB_PORT et DB_DATABASE sont `sync: false` pour une raison précise :
+      # Aiven attribue un PORT ALÉATOIRE (12xxx, 24xxx…) et nomme la base
+      # `defaultdb`. Un `3306` et un `tontine` codés en dur feraient échouer
+      # la migration avec « connection refused » ou « unknown database », et
+      # l'erreur est noyée dans les logs du build.
       - key: DB_HOST
         sync: false
       - key: DB_PORT
-        value: "3306"
+        sync: false
       - key: DB_DATABASE
-        value: tontine
+        sync: false
       - key: DB_USERNAME
         sync: false
       - key: DB_PASSWORD
