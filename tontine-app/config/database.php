@@ -104,9 +104,13 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
+            // TLS : mysql_ssl_set() n'active le chiffrement que si ATTR_SSL_CA
+            // est renseigné, y compris quand la vérification est désactivée.
+            // CA fournie -> ssl-mode=VERIFY_CA. CA absente -> ssl-mode=REQUIRED
+            // (chiffrement sans vérification) : `/dev/null` n'est qu'un drapeau
+            // non vide, jamais lu. `array_filter` est écarté car il supprimerait
+            // le `false` et la connexion retomberait en clair.
+            'options' => extension_loaded('pdo_mysql') ? (($ca = env('MYSQL_ATTR_SSL_CA')) ? [Mysql::ATTR_SSL_CA => $ca] : [Mysql::ATTR_SSL_CA => '/dev/null', Mysql::ATTR_SSL_VERIFY_SERVER_CERT => false]) : [],
         ],
 
         'mariadb' => [
